@@ -1,7 +1,7 @@
 package gabrielribeiro.com.br.appmovies.Model;
 
-public class MovieModel3 {
-    private MovieModel2[] results;
+public class MovieModelResponse {
+    private MovieDetailModel[] results;
 
     private String page;
 
@@ -9,12 +9,12 @@ public class MovieModel3 {
 
     private String total_results;
 
-    public MovieModel2[] getResults ()
+    public MovieDetailModel[] getResults ()
     {
         return results;
     }
 
-    public void setResults (MovieModel2[] results)
+    public void setResults (MovieDetailModel[] results)
     {
         this.results = results;
     }

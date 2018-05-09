@@ -15,11 +15,6 @@ public class MovieDetailActivity extends AppCompatActivity {
     public TextView tvReleaseDate;
     public ImageView ivPoster;
 
-    /* intent.putExtra("ORIGINAL_TITLE", movieListResults[AdapterPosition].getOriginal_title());
-            intent.putExtra("POSTER_PATH", movieListResults[AdapterPosition].getPoster_path());
-            intent.putExtra("SINOPSE", movieListResults[AdapterPosition].getOverview());
-            intent.putExtra("VOTE_AVARAGE", movieListResults[AdapterPosition].getVote_average());
-            intent.putExtra("RELEASE_DATE", movieListResults[AdapterPosition].getRelease_date());*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,16 +35,6 @@ public class MovieDetailActivity extends AppCompatActivity {
         Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w500" + getIntent().getStringExtra("POSTER_PATH"))
                 .into(ivPoster);
 
-    }
-
-    public void showData(){
-
-        tvOriginalTitle.setText(getIntent().getStringExtra("ORIGINAL_TITLE"));
-        tvVoteAvarage.setText(getIntent().getStringExtra("VOTE_AVARAGE"));
-        tvReleaseDate.setText(getIntent().getStringExtra("RELEASE_DATE"));
-        tvSinopse.setText(getIntent().getStringExtra("SINOPSE"));
-        Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w342" + getIntent().getStringExtra("POSTER_PATH"))
-                .into(ivPoster);
     }
 
 }

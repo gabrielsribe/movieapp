@@ -9,11 +9,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
-import gabrielribeiro.com.br.appmovies.R;
-
 public class NetworkUtils {
 
-    public String API_KEY;
     private final static String PARAM_KEY= "api_key";
     private final static String PARAM_POPULAR = "popular";
     private final static String PARAM_TOP_RATED = "top_rated";

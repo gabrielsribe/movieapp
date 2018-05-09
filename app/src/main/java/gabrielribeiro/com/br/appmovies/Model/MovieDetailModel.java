@@ -1,6 +1,6 @@
 package gabrielribeiro.com.br.appmovies.Model;
 
-public class MovieModel2 {
+public class MovieDetailModel {
     private String vote_average;
 
     private String backdrop_path;

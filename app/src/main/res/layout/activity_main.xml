@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/tvErrorMessage"
         android:layout_gravity="center|center_vertical"
-        android:text="Sem conexao com a internet!"
+        android:text="@string/WITHOUT_INTERNET_MESSAGE"
         android:visibility="gone"/>
 
 </LinearLayout>

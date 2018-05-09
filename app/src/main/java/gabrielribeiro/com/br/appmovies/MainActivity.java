@@ -15,7 +15,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import gabrielribeiro.com.br.appmovies.Adapter.MovieAdapter;
-import gabrielribeiro.com.br.appmovies.Model.MovieModel3;
+import gabrielribeiro.com.br.appmovies.Model.MovieModelResponse;
 import gabrielribeiro.com.br.appmovies.utils.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
@@ -130,12 +129,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (itemThatWasClickedId == R.id.action_popular) {
             makeMovieDbSearchQuery("popular");
-            //makeMovieDbSearchQuery();
             return true;
         }
         if (itemThatWasClickedId == R.id.action_top_rated) {
             makeMovieDbSearchQuery("top_rated");
-            //makeMovieDbSearchQuery();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -145,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
         Gson gson = new Gson();
         try{
-            MovieModel3 response = gson.fromJson( jsonData, MovieModel3.class );
+            MovieModelResponse response = gson.fromJson( jsonData, MovieModelResponse.class );
             mAdapter = new MovieAdapter(response.getResults());
             mRecyclerView.setAdapter(mAdapter);
             mAdapter.notifyDataSetChanged();
@@ -189,16 +186,11 @@ public class MainActivity extends AppCompatActivity {
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
             case 1: {
-
-                // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED &
                         grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     showResults();
                 } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
                     Toast.makeText(MainActivity.this, "Necessário autorizar as permissões", Toast.LENGTH_SHORT).show();
                     showErrorMessage();
                 }
