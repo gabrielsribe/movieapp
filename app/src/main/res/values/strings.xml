@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AppMovies</string>
+    <string name="original_title_label">Original title:</string>
+    <string name="vote_average_label">Vote average:</string>
+    <string name="release_date_label">Release date:</string>
+    <string name="overview_label">Overview:</string>
+    <string name="public_api_key"></string>
+</resources>
