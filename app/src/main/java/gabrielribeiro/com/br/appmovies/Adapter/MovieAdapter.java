@@ -37,6 +37,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
             intent.putExtra("SINOPSE", movieListResults[AdapterPosition].getOverview());
             intent.putExtra("VOTE_AVARAGE", movieListResults[AdapterPosition].getVote_average());
             intent.putExtra("RELEASE_DATE", movieListResults[AdapterPosition].getRelease_date());
+            intent.putExtra("ID", movieListResults[AdapterPosition].getId());
 
             v.getContext().startActivity(intent);
         }

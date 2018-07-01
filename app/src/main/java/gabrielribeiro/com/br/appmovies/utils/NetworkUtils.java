@@ -1,6 +1,7 @@
 package gabrielribeiro.com.br.appmovies.utils;
 
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,15 +15,17 @@ public class NetworkUtils {
     private final static String PARAM_KEY= "api_key";
     private final static String PARAM_POPULAR = "popular";
     private final static String PARAM_TOP_RATED = "top_rated";
+    private final static String PARAM_TRAILER = "videos";
 
 
     private final static String MOVIEDB_BASE_URL =
             "http://api.themoviedb.org/3/movie";
 
 
-    public static URL buildUrl(String queryType, String  API_KEY) {
 
-        Uri builtUri;
+    public static URL buildUrl(String queryType, String  API_KEY, String movieId ) {
+
+        Uri builtUri = null;
         String queryParam = PARAM_POPULAR;
 
         if(queryType.equals("popular")){
@@ -31,10 +34,19 @@ public class NetworkUtils {
         if(queryType.equals("top_rated")){
             queryParam = PARAM_TOP_RATED;
         }
-
-        builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(queryParam)
-                .appendQueryParameter(PARAM_KEY,API_KEY)
-                .build();
+        if(queryType.equals("trailer")){
+            queryParam = movieId;
+        }
+        if(movieId != null){
+            builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(queryParam)
+                    .appendPath(PARAM_TRAILER)
+                    .appendQueryParameter(PARAM_KEY,API_KEY)
+                    .build();
+        } else {
+            builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(queryParam)
+                    .appendQueryParameter(PARAM_KEY,API_KEY)
+                    .build();
+        }
 
         URL url = null;
         try {

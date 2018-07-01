@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void makeMovieDbSearchQuery(String queryType) {
-        URL movieQuery = NetworkUtils.buildUrl(queryType, getString(R.string.public_api_key));
+        URL movieQuery = NetworkUtils.buildUrl(queryType, getString(R.string.public_api_key), null);
         new movieQuerySearch().execute(movieQuery);
     }
 
@@ -194,7 +194,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Necessário autorizar as permissões", Toast.LENGTH_SHORT).show();
                     showErrorMessage();
                 }
-                return;
             }
         }
     }
