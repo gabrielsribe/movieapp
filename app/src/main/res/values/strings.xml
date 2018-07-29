@@ -4,6 +4,8 @@
     <string name="vote_average_label">Vote average:</string>
     <string name="release_date_label">Release date:</string>
     <string name="overview_label">Overview:</string>
-    <string name="public_api_key">YOUR KEY</string>
+    <string name="public_api_key">YOUR_API_KEY</string>
     <string name="WITHOUT_INTERNET_MESSAGE">Sem conexao com a internet!</string>
+    <string name="menu_popularity">Popularity</string>
+    <string name="menu_top_rated">Top Rated</string>
 </resources>

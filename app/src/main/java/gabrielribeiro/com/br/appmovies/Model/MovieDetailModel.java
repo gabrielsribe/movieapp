@@ -29,6 +29,8 @@ public class MovieDetailModel {
 
     private String popularity;
 
+    private byte[] poster;
+
     public String getVote_average ()
     {
         return vote_average;
@@ -167,5 +169,13 @@ public class MovieDetailModel {
     public void setPopularity (String popularity)
     {
         this.popularity = popularity;
+    }
+
+    public byte[] getPoster() {
+        return poster;
+    }
+
+    public void setPoster(byte[] poster) {
+        this.poster = poster;
     }
 }

@@ -23,18 +23,22 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import gabrielribeiro.com.br.appmovies.Adapter.MovieAdapter;
 import gabrielribeiro.com.br.appmovies.Model.MovieModelResponse;
+import gabrielribeiro.com.br.appmovies.database.AppDatabase;
+import gabrielribeiro.com.br.appmovies.database.MovieEntry;
 import gabrielribeiro.com.br.appmovies.utils.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
 
     public RecyclerView mRecyclerView;
-    public RecyclerView.Adapter mAdapter;
+    public MovieAdapter mAdapter;
     public RecyclerView.LayoutManager mLayoutManager;
     public ProgressBar mProgressIndicator;
     public TextView tvError;
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,15 +50,24 @@ public class MainActivity extends AppCompatActivity {
         tvError = findViewById(R.id.tvErrorMessage);
 
         mRecyclerView.setHasFixedSize(true);
+        mLayoutManager = new GridLayoutManager(this, 2);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        mDb = AppDatabase.getInstance(getApplicationContext());
 
         requestPermissions();
+        maakeDefinedSearch();
 
+
+
+        mAdapter = new MovieAdapter();
+    }
+
+    public void maakeDefinedSearch() {
         if(isNetworkAvailable()) {
             makeMovieDbSearchQuery("popular");
-            mLayoutManager = new GridLayoutManager(this, 2);
-            mRecyclerView.setLayoutManager(mLayoutManager);
         }else{
-            showErrorMessage();
+            retrieveMoviesOffline();
         }
     }
 
@@ -119,14 +132,13 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         int itemThatWasClickedId = item.getItemId();
+        showResults();
 
-        if(!isNetworkAvailable()){
-            showErrorMessage();
-            return false;
-        }else{
-            showResults();
+        if(!isNetworkAvailable()) {
+            retrieveMoviesOffline();
+            Toast.makeText(MainActivity.this, "Sem conexão com a internet... Pesquisa Offline", Toast.LENGTH_SHORT).show();
+            return true;
         }
-
         if (itemThatWasClickedId == R.id.action_popular) {
             makeMovieDbSearchQuery("popular");
             return true;
@@ -143,22 +155,12 @@ public class MainActivity extends AppCompatActivity {
         Gson gson = new Gson();
         try{
             MovieModelResponse response = gson.fromJson( jsonData, MovieModelResponse.class );
-            mAdapter = new MovieAdapter(response.getResults());
+            mAdapter.setMovieList(response.getResults());
             mRecyclerView.setAdapter(mAdapter);
-            mAdapter.notifyDataSetChanged();
         }catch (Exception e){
             e.printStackTrace();
         }
 
-    }
-
-    public boolean isNetworkAvailable(){
-        ConnectivityManager cm =
-                (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
     }
 
 
@@ -196,5 +198,39 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void retrieveMoviesOffline() {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                final List<MovieEntry> movies = mDb.taskDao().loadAllMovies();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(mRecyclerView.getAdapter() == null) {
+                            mAdapter.setMovies(movies);
+                            mRecyclerView.setAdapter(mAdapter);
+                        } else {
+                            mAdapter.setMovies(movies);
+                        }
+                    }
+                });
+            }
+        });
+    }
+    public boolean isNetworkAvailable(){
+        ConnectivityManager cm =
+                (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        maakeDefinedSearch();
     }
 }

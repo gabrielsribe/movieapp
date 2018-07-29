@@ -1,5 +1,9 @@
 package gabrielribeiro.com.br.appmovies;
 
+import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -15,11 +19,13 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import gabrielribeiro.com.br.appmovies.Adapter.TrailerAdapter;
 import gabrielribeiro.com.br.appmovies.Model.TrailerModelResponse;
 import gabrielribeiro.com.br.appmovies.database.AppDatabase;
 import gabrielribeiro.com.br.appmovies.database.MovieEntry;
+import gabrielribeiro.com.br.appmovies.utils.ImageConverter;
 import gabrielribeiro.com.br.appmovies.utils.NetworkUtils;
 
 public class MovieDetailActivity extends AppCompatActivity {
@@ -29,16 +35,15 @@ public class MovieDetailActivity extends AppCompatActivity {
     public TextView tvVoteAvarage;
     public TextView tvReleaseDate;
     public ImageView ivPoster;
+    public MovieEntry movieObject;
     public RecyclerView recyclerViewTrailer;
     public RecyclerView.Adapter mTrailerAdapter;
     public RecyclerView.LayoutManager mLayoutManager;
     public Button mButtonFavorite;
+    List<MovieEntry> listMovies;
+    public Boolean isMoviePresent = false;
 
-    public String movieId;
-    public String originalTitle;
-    public String releaseDate;
-    public String voteAverage;
-    public String sinopse;
+    public byte[] poster;
 
     private AppDatabase mDb;
 
@@ -59,24 +64,22 @@ public class MovieDetailActivity extends AppCompatActivity {
         tvReleaseDate = findViewById(R.id.tvReleaseDate);
         tvSinopse = findViewById(R.id.tvSinopse);
         recyclerViewTrailer = findViewById(R.id.recyclerViewTrailer);
-        mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         recyclerViewTrailer.setLayoutManager(mLayoutManager);
         mButtonFavorite = findViewById(R.id.btnFavorite);
 
         //setup values from intent
-        movieId = getIntent().getStringExtra("ID");
-        originalTitle = getIntent().getStringExtra("ORIGINAL_TITLE");
-        releaseDate = getIntent().getStringExtra("RELEASE_DATE");
-        voteAverage = getIntent().getStringExtra("VOTE_AVARAGE");
-        sinopse = getIntent().getStringExtra("SINOPSE");
+        movieObject = new MovieEntry(getIntent().getStringExtra("ORIGINAL_TITLE"),
+                getIntent().getStringExtra("ID"),
+                getIntent().getStringExtra("SINOPSE"),
+                getIntent().getStringExtra("VOTE_AVARAGE"),
+                getIntent().getStringExtra("RELEASE_DATE"));
 
-
-        tvOriginalTitle.setText(originalTitle);
-        tvVoteAvarage.setText(voteAverage);
-        tvReleaseDate.setText(releaseDate);
-        tvSinopse.setText(sinopse);
-        Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w500" + getIntent().getStringExtra("POSTER_PATH"))
-                .into(ivPoster);
+        //setup view values
+        tvOriginalTitle.setText(movieObject.getOriginalTitle());
+        tvVoteAvarage.setText(movieObject.getVoteAverage());
+        tvReleaseDate.setText(movieObject.getReleaseDate());
+        tvSinopse.setText(movieObject.getSinopse());
 
         mButtonFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,16 +88,25 @@ public class MovieDetailActivity extends AppCompatActivity {
             }
         });
 
-        makeTrailerSearchQuery();
 
+        if(isNetworkAvailable()) {
+            Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w342" + getIntent().getStringExtra("POSTER_PATH"))
+                    .into(ivPoster);
+            makeTrailerSearchQuery();
+        } else {
+            movieObject.setPoster(getIntent().getByteArrayExtra("POSTER"));
+            ivPoster.setImageBitmap(ImageConverter.ConvertByteArrayToBitmap(movieObject.getPoster()));
+        }
+
+        verifyIfmovieExists();
     }
 
     private void makeTrailerSearchQuery() {
-        URL movieQuery = NetworkUtils.buildUrl("trailer", getString(R.string.public_api_key), movieId);
+        URL movieQuery = NetworkUtils.buildUrl("trailer", getString(R.string.public_api_key), movieObject.getIdMovie());
         new trailerQuerySearch().execute(movieQuery);
     }
 
-    public void ParseJsonToMovieList(String jsonData){
+    public void ParseJsonToTrailerList(String jsonData){
 
         Gson gson = new Gson();
         try{
@@ -134,7 +146,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
             if (searchResults != null && !searchResults.equals("")) {
 
-                ParseJsonToMovieList(searchResults);
+                ParseJsonToTrailerList(searchResults);
 
             } else {
                 //showErrorMessage();
@@ -144,33 +156,51 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     public void onFavoriteButtonClicked() {
 
-        //precisamos verificar se o filme ja existe no bd, caso exista
-        //preciso trocar o texto do botão e mudar a action
-        //para remover o filme
-        //AppExecutors.getInstance().diskIO().execute(new Runnable() {
-        //                    @Override
-        //                    public void run() {
-        //                        // COMPLETED (3) get the position from the viewHolder parameter
-        //                        int position = viewHolder.getAdapterPosition();
-        //                        List<TaskEntry> tasks = mAdapter.getTasks();
-        //                        // COMPLETED (4) Call deleteTask in the taskDao with the task at that position
-        //                        mDb.taskDao().deleteTask(tasks.get(position));
-        //                        // COMPLETED (6) Call retrieveTasks method to refresh the UI
-        //                        retrieveTasks();
-        //                    }
-        //                });
-        //(String originalTitle, int idMovie, String sinopse, String voteAverage,
-        //                      String releaseDate, Date updatedAt) {
-        final MovieEntry movieEntry = new MovieEntry(originalTitle, movieId, sinopse, voteAverage,
-                                     releaseDate);
+        poster = ImageConverter.ConvertImageToByteArray(((BitmapDrawable) ivPoster.getDrawable()).getBitmap());
+        movieObject.setPoster(poster);
+
+
+        if(isMoviePresent) {
+            AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    mDb.taskDao().deleteMovie(movieObject.getIdMovie());
+                    finish();
+                }
+            });
+        } else {
+            AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    mDb.taskDao().insertMovie(movieObject);
+                    finish();
+                }
+            });
+        }
+    }
+
+    public void verifyIfmovieExists() {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                // COMPLETED (3) Move the remaining logic inside the run method
-                mDb.taskDao().insertMovie(movieEntry);
-                finish();
+                String movieid = movieObject.getIdMovie();
+                listMovies =  mDb.taskDao().searchMovie(movieObject.getIdMovie());
+
+                if(listMovies.size() > 0) {
+                    mButtonFavorite.setText("Desfavoritar");
+                    isMoviePresent = true;
+                }
             }
         });
+    }
+
+    public boolean isNetworkAvailable(){
+        ConnectivityManager cm =
+                (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
     }
 
 }

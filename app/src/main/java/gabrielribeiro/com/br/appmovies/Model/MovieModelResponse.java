@@ -1,7 +1,9 @@
 package gabrielribeiro.com.br.appmovies.Model;
 
+import java.util.List;
+
 public class MovieModelResponse {
-    private MovieDetailModel[] results;
+    private List<MovieDetailModel> results;
 
     private String page;
 
@@ -9,12 +11,12 @@ public class MovieModelResponse {
 
     private String total_results;
 
-    public MovieDetailModel[] getResults ()
+    public List<MovieDetailModel> getResults ()
     {
         return results;
     }
 
-    public void setResults (MovieDetailModel[] results)
+    public void setResults (List<MovieDetailModel> results)
     {
         this.results = results;
     }

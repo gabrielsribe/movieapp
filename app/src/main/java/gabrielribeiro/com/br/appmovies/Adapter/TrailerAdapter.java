@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import gabrielribeiro.com.br.appmovies.Model.MovieDetailModel;
 import gabrielribeiro.com.br.appmovies.Model.TrailerDetailModel;
 import gabrielribeiro.com.br.appmovies.R;
 

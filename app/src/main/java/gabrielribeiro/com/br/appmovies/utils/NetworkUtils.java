@@ -1,7 +1,6 @@
 package gabrielribeiro.com.br.appmovies.utils;
 
 import android.net.Uri;
-import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;

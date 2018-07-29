@@ -5,8 +5,6 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 
-import java.util.Date;
-
 @Entity(tableName = "movie")
 public class MovieEntry {
 
@@ -19,6 +17,8 @@ public class MovieEntry {
     private String sinopse;
     private String voteAverage;
     private String releaseDate;
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
+    private byte[] poster;
 
     @Ignore
     public MovieEntry(String originalTitle, String idMovie, String sinopse, String voteAverage,
@@ -31,13 +31,14 @@ public class MovieEntry {
     }
 
     public MovieEntry(int id, String originalTitle, String idMovie, String sinopse, String voteAverage,
-                      String releaseDate) {
+                      String releaseDate, byte[] poster) {
         this.id = id;
         this.originalTitle = originalTitle;
         this.idMovie = idMovie;
         this.sinopse = sinopse;
         this.voteAverage = voteAverage;
         this.releaseDate = releaseDate;
+        this.poster = poster;
     }
 
     public int getId() {
@@ -86,5 +87,13 @@ public class MovieEntry {
 
     public void setReleaseDate(String releaseDate) {
         this.releaseDate = releaseDate;
+    }
+
+    public byte[] getPoster() {
+        return poster;
+    }
+
+    public void setPoster(byte[] poster) {
+        this.poster = poster;
     }
 }
