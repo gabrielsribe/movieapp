@@ -56,9 +56,14 @@ public class MainActivity extends AppCompatActivity {
         mDb = AppDatabase.getInstance(getApplicationContext());
 
         requestPermissions();
-        maakeDefinedSearch();
 
-
+        if(!isNetworkAvailable()) {
+            retrieveMoviesOffline();
+            showErrorMessage();
+        } else {
+            showResults();
+            makeMovieDbSearchQuery("popular");
+        }
 
         mAdapter = new MovieAdapter();
     }
@@ -134,17 +139,16 @@ public class MainActivity extends AppCompatActivity {
         int itemThatWasClickedId = item.getItemId();
         showResults();
 
-        if(!isNetworkAvailable()) {
-            retrieveMoviesOffline();
-            Toast.makeText(MainActivity.this, "Sem conexão com a internet... Pesquisa Offline", Toast.LENGTH_SHORT).show();
-            return true;
-        }
         if (itemThatWasClickedId == R.id.action_popular) {
             makeMovieDbSearchQuery("popular");
             return true;
         }
         if (itemThatWasClickedId == R.id.action_top_rated) {
             makeMovieDbSearchQuery("top_rated");
+            return true;
+        }
+        if (itemThatWasClickedId == R.id.action_top_favorites) {
+            retrieveMoviesOffline();
             return true;
         }
         return super.onOptionsItemSelected(item);

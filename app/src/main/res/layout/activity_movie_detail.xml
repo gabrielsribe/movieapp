@@ -10,6 +10,16 @@
         android:layout_height="wrap_content"
         tools:context=".MovieDetailActivity">
 
+        <TextView
+            android:id="@+id/tvTrailer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/trailers_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerViewTrailer"
             android:layout_width="0dp"
@@ -18,9 +28,8 @@
             android:orientation="horizontal"
             app:layout_constraintBottom_toTopOf="@+id/movieArt"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView" />
+            app:layout_constraintTop_toBottomOf="@+id/tvTrailer" />
 
         <ImageView
             android:id="@+id/movieArt"
@@ -123,14 +132,26 @@
             app:layout_constraintTop_toBottomOf="@+id/labelSinopse" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/tvUserReview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:text="Trailers"
+            android:layout_marginTop="16dp"
+            android:text="@string/user_reviews"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/tvSinopse" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rvUserReviews"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvUserReview" />
+
 
     </android.support.constraint.ConstraintLayout>
 

@@ -27,18 +27,9 @@ public class NetworkUtils {
         Uri builtUri = null;
         String queryParam = PARAM_POPULAR;
 
-        if(queryType.equals("popular")){
-            queryParam = PARAM_POPULAR;
-        }
-        if(queryType.equals("top_rated")){
-            queryParam = PARAM_TOP_RATED;
-        }
-        if(queryType.equals("trailer")){
-            queryParam = movieId;
-        }
         if(movieId != null){
-            builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(queryParam)
-                    .appendPath(PARAM_TRAILER)
+            builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(movieId)
+                    .appendPath(queryType)
                     .appendQueryParameter(PARAM_KEY,API_KEY)
                     .build();
         } else {

@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import gabrielribeiro.com.br.appmovies.Adapter.ReviewAdapter;
 import gabrielribeiro.com.br.appmovies.Adapter.TrailerAdapter;
+import gabrielribeiro.com.br.appmovies.Model.ReviewModelResponse;
 import gabrielribeiro.com.br.appmovies.Model.TrailerModelResponse;
 import gabrielribeiro.com.br.appmovies.database.AppDatabase;
 import gabrielribeiro.com.br.appmovies.database.MovieEntry;
 import gabrielribeiro.com.br.appmovies.utils.ImageConverter;
 import gabrielribeiro.com.br.appmovies.utils.NetworkUtils;
+import gabrielribeiro.com.br.appmovies.utils.TrailerSearch;
 
 public class MovieDetailActivity extends AppCompatActivity {
 
@@ -34,14 +37,20 @@ public class MovieDetailActivity extends AppCompatActivity {
     public TextView tvSinopse;
     public TextView tvVoteAvarage;
     public TextView tvReleaseDate;
+    public TextView tvUserReview;
+    public TextView tvTrailer;
     public ImageView ivPoster;
     public MovieEntry movieObject;
     public RecyclerView recyclerViewTrailer;
+    public RecyclerView recyclerViewReview;
     public RecyclerView.Adapter mTrailerAdapter;
-    public RecyclerView.LayoutManager mLayoutManager;
+    public RecyclerView.LayoutManager mTrailerLayoutManager;
+    public RecyclerView.Adapter mReviewAdapter;
+    public RecyclerView.LayoutManager mReviewLayoutManager;
     public Button mButtonFavorite;
     List<MovieEntry> listMovies;
     public Boolean isMoviePresent = false;
+
 
     public byte[] poster;
 
@@ -63,10 +72,21 @@ public class MovieDetailActivity extends AppCompatActivity {
         tvVoteAvarage = findViewById(R.id.tvVoteAvarage);
         tvReleaseDate = findViewById(R.id.tvReleaseDate);
         tvSinopse = findViewById(R.id.tvSinopse);
-        recyclerViewTrailer = findViewById(R.id.recyclerViewTrailer);
-        mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        recyclerViewTrailer.setLayoutManager(mLayoutManager);
+        tvTrailer = findViewById(R.id.tvTrailer);
         mButtonFavorite = findViewById(R.id.btnFavorite);
+        tvUserReview = findViewById(R.id.tvUserReview);
+
+        //recycle view trailer
+        recyclerViewTrailer = findViewById(R.id.recyclerViewTrailer);
+        mTrailerLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        recyclerViewTrailer.setLayoutManager(mTrailerLayoutManager);
+
+        //recycle view user reviews
+        recyclerViewReview = findViewById(R.id.rvUserReviews);
+        mReviewLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        recyclerViewReview.setLayoutManager(mReviewLayoutManager);
+
+
 
         //setup values from intent
         movieObject = new MovieEntry(getIntent().getStringExtra("ORIGINAL_TITLE"),
@@ -92,66 +112,34 @@ public class MovieDetailActivity extends AppCompatActivity {
         if(isNetworkAvailable()) {
             Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w342" + getIntent().getStringExtra("POSTER_PATH"))
                     .into(ivPoster);
-            makeTrailerSearchQuery();
+
+            //make queries
+            new reviewQuerySearch().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                     makeSearchQuery("reviews", movieObject.getIdMovie()));
+            new trailerQuerySearch().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                    makeSearchQuery("videos", movieObject.getIdMovie()));
+
+            tvTrailer.setVisibility(View.VISIBLE);
+            recyclerViewTrailer.setVisibility(View.VISIBLE);
+            tvUserReview.setVisibility(View.VISIBLE);
+            recyclerViewReview.setVisibility(View.VISIBLE);
+
         } else {
+
             movieObject.setPoster(getIntent().getByteArrayExtra("POSTER"));
             ivPoster.setImageBitmap(ImageConverter.ConvertByteArrayToBitmap(movieObject.getPoster()));
+            tvTrailer.setVisibility(View.GONE);
+            recyclerViewTrailer.setVisibility(View.GONE);
+            tvUserReview.setVisibility(View.GONE);
+            recyclerViewReview.setVisibility(View.GONE);
+
         }
 
         verifyIfmovieExists();
     }
 
-    private void makeTrailerSearchQuery() {
-        URL movieQuery = NetworkUtils.buildUrl("trailer", getString(R.string.public_api_key), movieObject.getIdMovie());
-        new trailerQuerySearch().execute(movieQuery);
-    }
-
-    public void ParseJsonToTrailerList(String jsonData){
-
-        Gson gson = new Gson();
-        try{
-            TrailerModelResponse response = gson.fromJson( jsonData, TrailerModelResponse.class );
-            mTrailerAdapter = new TrailerAdapter(response.getResults());
-            recyclerViewTrailer.setAdapter(mTrailerAdapter);
-            mTrailerAdapter.notifyDataSetChanged();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
-
-    public class trailerQuerySearch extends AsyncTask<URL, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            //mProgressIndicator.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected String doInBackground(URL... params) {
-            URL searchUrl = params[0];
-            String movieDbSearchResults = null;
-            try {
-                movieDbSearchResults = NetworkUtils.getResponseFromHttpUrl(searchUrl);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return movieDbSearchResults;
-        }
-
-        @Override
-        protected void onPostExecute(String searchResults) {
-            //mProgressIndicator.setVisibility(View.INVISIBLE);
-
-            if (searchResults != null && !searchResults.equals("")) {
-
-                ParseJsonToTrailerList(searchResults);
-
-            } else {
-                //showErrorMessage();
-            }
-        }
+    private URL makeSearchQuery(String queryType, String idMovie) {
+        return NetworkUtils.buildUrl(queryType, getString(R.string.public_api_key), idMovie);
     }
 
     public void onFavoriteButtonClicked() {
@@ -183,7 +171,6 @@ public class MovieDetailActivity extends AppCompatActivity {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                String movieid = movieObject.getIdMovie();
                 listMovies =  mDb.taskDao().searchMovie(movieObject.getIdMovie());
 
                 if(listMovies.size() > 0) {
@@ -201,6 +188,96 @@ public class MovieDetailActivity extends AppCompatActivity {
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
+    }
+
+    public class trailerQuerySearch extends AsyncTask<URL, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(URL... params) {
+            URL searchUrl = params[0];
+            String movieDbSearchResults = null;
+            try {
+                movieDbSearchResults = NetworkUtils.getResponseFromHttpUrl(searchUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return movieDbSearchResults;
+        }
+
+        @Override
+        protected void onPostExecute(String trailerSearchResults) {
+
+            if (trailerSearchResults != null && !trailerSearchResults.equals("")) {
+                ParseJsonToTrailerList(trailerSearchResults);
+            }
+        }
+    }
+
+    public class reviewQuerySearch extends AsyncTask<URL, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(URL... params) {
+            URL searchUrl = params[0];
+            String movieDbSearchResults = null;
+            try {
+                movieDbSearchResults = NetworkUtils.getResponseFromHttpUrl(searchUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return movieDbSearchResults;
+        }
+
+        @Override
+        protected void onPostExecute(String reviewJsonResult) {
+
+            if (reviewJsonResult != null && !reviewJsonResult.equals("")) {
+                ParseJsonToReviewList(reviewJsonResult);
+            }
+        }
+    }
+
+    public void ParseJsonToTrailerList(String jsonData){
+
+
+        Gson gson = new Gson();
+        try{
+            TrailerModelResponse response = gson.fromJson( jsonData, TrailerModelResponse.class );
+            mTrailerAdapter = new TrailerAdapter(response.getResults());
+            recyclerViewTrailer.setAdapter(mTrailerAdapter);
+            mTrailerAdapter.notifyDataSetChanged();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    public void ParseJsonToReviewList(String jsonData){
+
+
+        Gson gson = new Gson();
+        try{
+
+            ReviewModelResponse response = gson.fromJson( jsonData, ReviewModelResponse.class );
+            mReviewAdapter = new ReviewAdapter(response.getResults());
+            recyclerViewReview.setAdapter(mReviewAdapter);
+            mReviewAdapter.notifyDataSetChanged();
+
+        } catch (Exception e){
+
+            e.printStackTrace();
+
+        }
+
     }
 
 }
