@@ -139,6 +139,10 @@ public class MainActivity extends AppCompatActivity {
         int itemThatWasClickedId = item.getItemId();
         showResults();
 
+        if(!isNetworkAvailable()) {
+            showErrorMessage();
+        }
+
         if (itemThatWasClickedId == R.id.action_popular) {
             makeMovieDbSearchQuery("popular");
             return true;
@@ -148,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (itemThatWasClickedId == R.id.action_top_favorites) {
+            showResults();
             retrieveMoviesOffline();
             return true;
         }

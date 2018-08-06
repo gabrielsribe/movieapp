@@ -29,7 +29,6 @@ import gabrielribeiro.com.br.appmovies.database.AppDatabase;
 import gabrielribeiro.com.br.appmovies.database.MovieEntry;
 import gabrielribeiro.com.br.appmovies.utils.ImageConverter;
 import gabrielribeiro.com.br.appmovies.utils.NetworkUtils;
-import gabrielribeiro.com.br.appmovies.utils.TrailerSearch;
 
 public class MovieDetailActivity extends AppCompatActivity {
 
@@ -193,11 +192,6 @@ public class MovieDetailActivity extends AppCompatActivity {
     public class trailerQuerySearch extends AsyncTask<URL, Void, String> {
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
         protected String doInBackground(URL... params) {
             URL searchUrl = params[0];
             String movieDbSearchResults = null;
@@ -219,11 +213,6 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     public class reviewQuerySearch extends AsyncTask<URL, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
 
         @Override
         protected String doInBackground(URL... params) {

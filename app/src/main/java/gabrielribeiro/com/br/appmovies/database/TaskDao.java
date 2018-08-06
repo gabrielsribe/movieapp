@@ -17,9 +17,6 @@ public interface TaskDao {
     @Insert
     void insertMovie(MovieEntry movieEntry);
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    void updateMovie(MovieEntry movieEntry);
-
     @Query("DELETE  FROM movie WHERE idMovie LIKE :movieId")
     void deleteMovie(String movieId);
 

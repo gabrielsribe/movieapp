@@ -12,9 +12,6 @@ import java.util.Scanner;
 public class NetworkUtils {
 
     private final static String PARAM_KEY= "api_key";
-    private final static String PARAM_POPULAR = "popular";
-    private final static String PARAM_TOP_RATED = "top_rated";
-    private final static String PARAM_TRAILER = "videos";
 
 
     private final static String MOVIEDB_BASE_URL =
@@ -25,7 +22,6 @@ public class NetworkUtils {
     public static URL buildUrl(String queryType, String  API_KEY, String movieId ) {
 
         Uri builtUri = null;
-        String queryParam = PARAM_POPULAR;
 
         if(movieId != null){
             builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(movieId)
@@ -33,7 +29,7 @@ public class NetworkUtils {
                     .appendQueryParameter(PARAM_KEY,API_KEY)
                     .build();
         } else {
-            builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(queryParam)
+            builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon().appendPath(queryType)
                     .appendQueryParameter(PARAM_KEY,API_KEY)
                     .build();
         }
