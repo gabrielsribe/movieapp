@@ -143,11 +143,13 @@ public class MainActivity extends AppCompatActivity {
             showErrorMessage();
         }
 
-        if (itemThatWasClickedId == R.id.action_popular) {
+        if (itemThatWasClickedId == R.id.action_popular && isNetworkAvailable()) {
+            showResults();
             makeMovieDbSearchQuery("popular");
             return true;
         }
-        if (itemThatWasClickedId == R.id.action_top_rated) {
+        if (itemThatWasClickedId == R.id.action_top_rated && isNetworkAvailable()) {
+            showResults();
             makeMovieDbSearchQuery("top_rated");
             return true;
         }
