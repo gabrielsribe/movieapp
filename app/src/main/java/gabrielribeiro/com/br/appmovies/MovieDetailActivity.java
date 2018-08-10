@@ -1,6 +1,7 @@
 package gabrielribeiro.com.br.appmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
@@ -49,6 +51,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     public Button mButtonFavorite;
     List<MovieEntry> listMovies;
     public Boolean isMoviePresent = false;
+    final Intent activityResult = new Intent();
 
 
     public byte[] poster;
@@ -93,12 +96,21 @@ public class MovieDetailActivity extends AppCompatActivity {
                 getIntent().getStringExtra("SINOPSE"),
                 getIntent().getStringExtra("VOTE_AVARAGE"),
                 getIntent().getStringExtra("RELEASE_DATE"));
+        movieObject.setPoster(getIntent().getByteArrayExtra("POSTER"));
 
         //setup view values
         tvOriginalTitle.setText(movieObject.getOriginalTitle());
         tvVoteAvarage.setText(movieObject.getVoteAverage());
         tvReleaseDate.setText(movieObject.getReleaseDate());
         tvSinopse.setText(movieObject.getSinopse());
+
+        //verify if poster already exists
+        if(movieObject.getPoster() !=  null) {
+            ivPoster.setImageBitmap(ImageConverter.ConvertByteArrayToBitmap(movieObject.getPoster()));
+        } else if(isNetworkAvailable()) {
+            Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w342" + getIntent().getStringExtra("POSTER_PATH"))
+                    .into(ivPoster);
+        }
 
         mButtonFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,8 +121,6 @@ public class MovieDetailActivity extends AppCompatActivity {
 
 
         if(isNetworkAvailable()) {
-            Picasso.with(getBaseContext()).load("http://image.tmdb.org/t/p/w342" + getIntent().getStringExtra("POSTER_PATH"))
-                    .into(ivPoster);
 
             //make queries
             new reviewQuerySearch().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
@@ -125,16 +135,13 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         } else {
 
-            movieObject.setPoster(getIntent().getByteArrayExtra("POSTER"));
-            ivPoster.setImageBitmap(ImageConverter.ConvertByteArrayToBitmap(movieObject.getPoster()));
             tvTrailer.setVisibility(View.GONE);
             recyclerViewTrailer.setVisibility(View.GONE);
             tvUserReview.setVisibility(View.GONE);
             recyclerViewReview.setVisibility(View.GONE);
-
         }
 
-        verifyIfmovieExists();
+        isMoviePresentInLocalStorage();
     }
 
     private URL makeSearchQuery(String queryType, String idMovie) {
@@ -146,36 +153,37 @@ public class MovieDetailActivity extends AppCompatActivity {
         poster = ImageConverter.ConvertImageToByteArray(((BitmapDrawable) ivPoster.getDrawable()).getBitmap());
         movieObject.setPoster(poster);
 
-
         if(isMoviePresent) {
+            setResult(RESULT_OK, activityResult);
             AppExecutors.getInstance().diskIO().execute(new Runnable() {
                 @Override
                 public void run() {
                     mDb.taskDao().deleteMovie(movieObject.getIdMovie());
-                    finish();
                 }
             });
         } else {
+            setResult(RESULT_CANCELED, activityResult);
             AppExecutors.getInstance().diskIO().execute(new Runnable() {
                 @Override
                 public void run() {
                     mDb.taskDao().insertMovie(movieObject);
-                    finish();
                 }
             });
         }
+        finish();
     }
 
-    public void verifyIfmovieExists() {
+    public void isMoviePresentInLocalStorage() {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
                 listMovies =  mDb.taskDao().searchMovie(movieObject.getIdMovie());
 
                 if(listMovies.size() > 0) {
-                    mButtonFavorite.setText("Desfavoritar");
+                    mButtonFavorite.setText(R.string.Unlike);
                     isMoviePresent = true;
                 }
+                CloseActivityIfMovieIsNotPresentAndDoesNotHaveInternet();
             }
         });
     }
@@ -267,6 +275,15 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         }
 
+    }
+
+    public void CloseActivityIfMovieIsNotPresentAndDoesNotHaveInternet() {
+        if(!isMoviePresent && !isNetworkAvailable()) {
+            setResult(RESULT_FIRST_USER, activityResult);
+            finish();
+        } else if (isMoviePresent) {
+            ivPoster.setImageBitmap(ImageConverter.ConvertByteArrayToBitmap(listMovies.get(0).getPoster()));
+        }
     }
 
 }

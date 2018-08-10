@@ -11,4 +11,5 @@
     <string name="menu_favorites">Favoritos</string>
     <string name="trailers_label">Trailers</string>
     <string name="user_reviews">User Reviews</string>
+    <string name="Unlike">Desfavoritar</string>
 </resources>

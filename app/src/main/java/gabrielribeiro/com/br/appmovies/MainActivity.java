@@ -2,11 +2,13 @@ package gabrielribeiro.com.br.appmovies;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -39,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
     public ProgressBar mProgressIndicator;
     public TextView tvError;
     private AppDatabase mDb;
+    private final String KEY_RECYCLER_STATE = "recycler_state";
+    private static Bundle mBundleRecyclerViewState;
+    private boolean isFavoriteList = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,22 +63,17 @@ public class MainActivity extends AppCompatActivity {
         requestPermissions();
 
         if(!isNetworkAvailable()) {
-            retrieveMoviesOffline();
             showErrorMessage();
-        } else {
+        }
+
+        if(isNetworkAvailable()){
             showResults();
             makeMovieDbSearchQuery("popular");
+        } else {
+            showErrorMessage();
         }
 
         mAdapter = new MovieAdapter();
-    }
-
-    public void maakeDefinedSearch() {
-        if(isNetworkAvailable()) {
-            makeMovieDbSearchQuery("popular");
-        }else{
-            retrieveMoviesOffline();
-        }
     }
 
 
@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void makeMovieDbSearchQuery(String queryType) {
+
         URL movieQuery = NetworkUtils.buildUrl(queryType, getString(R.string.public_api_key), null);
         new movieQuerySearch().execute(movieQuery);
     }
@@ -145,16 +146,19 @@ public class MainActivity extends AppCompatActivity {
 
         if (itemThatWasClickedId == R.id.action_popular && isNetworkAvailable()) {
             showResults();
+            isFavoriteList = false;
             makeMovieDbSearchQuery("popular");
             return true;
         }
         if (itemThatWasClickedId == R.id.action_top_rated && isNetworkAvailable()) {
             showResults();
+            isFavoriteList = false;
             makeMovieDbSearchQuery("top_rated");
             return true;
         }
         if (itemThatWasClickedId == R.id.action_top_favorites) {
             showResults();
+            isFavoriteList = true;
             retrieveMoviesOffline();
             return true;
         }
@@ -230,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     public boolean isNetworkAvailable(){
         ConnectivityManager cm =
                 (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -242,6 +247,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        maakeDefinedSearch();
+
+        if (mBundleRecyclerViewState != null) {
+            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(listState);
+        }
+
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+            if (resultCode == RESULT_OK && isFavoriteList) {
+                retrieveMoviesOffline();
+            }
+            if(resultCode == RESULT_FIRST_USER) {
+                Toast.makeText(getBaseContext(), "Sem conexão com a internet para ver os detalhes", Toast.LENGTH_SHORT).show();
+            }
+    }
+
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+
+        mBundleRecyclerViewState = new Bundle();
+        Parcelable listState = mRecyclerView.getLayoutManager().onSaveInstanceState();
+        mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
+    }
+
 }

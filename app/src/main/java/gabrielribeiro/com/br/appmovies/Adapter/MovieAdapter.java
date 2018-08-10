@@ -1,7 +1,11 @@
 package gabrielribeiro.com.br.appmovies.Adapter;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +25,7 @@ import gabrielribeiro.com.br.appmovies.database.MovieEntry;
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
 
     private List<MovieDetailModel> movieListResults;
+    private int CALL_ACTIVITY_FOR_RESULT = 1;
 
     public void setMovies(List<MovieEntry> movieEntries) {
         movieListResults = new ArrayList<>();
@@ -60,7 +65,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
             intent.putExtra("ID", movieListResults.get(position).getId());
             intent.putExtra("POSTER", movieListResults.get(position).getPoster());
 
-            v.getContext().startActivity(intent);
+            //v.getContext().start(intent);
+            ((Activity) v.getContext()).startActivityForResult(intent,CALL_ACTIVITY_FOR_RESULT);
         }
     }
 
@@ -96,6 +102,5 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     public int getItemCount() {
         return movieListResults.size();
     }
-
 }
 
