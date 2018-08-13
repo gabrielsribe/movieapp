@@ -245,17 +245,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (mBundleRecyclerViewState != null) {
-            Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
-            mRecyclerView.getLayoutManager().onRestoreInstanceState(listState);
-        }
-
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
             if (resultCode == RESULT_OK && isFavoriteList) {
@@ -268,13 +257,21 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
-    protected void onPause()
-    {
-        super.onPause();
+    public void onSaveInstanceState(Bundle savedInstanceState) {
 
         mBundleRecyclerViewState = new Bundle();
         Parcelable listState = mRecyclerView.getLayoutManager().onSaveInstanceState();
         mBundleRecyclerViewState.putParcelable(KEY_RECYCLER_STATE, listState);
+
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+
+        super.onRestoreInstanceState(savedInstanceState);
+
+        Parcelable listState = mBundleRecyclerViewState.getParcelable(KEY_RECYCLER_STATE);
+        mRecyclerView.getLayoutManager().onRestoreInstanceState(listState);
     }
 
 }
